@@ -9,6 +9,9 @@ import './App.css';
 /* ── TYPES ───────────────────────────────────────────────────────── */
 type Page = 'livescore' | 'highlights' | 'contact' | 'about' | 'terms' | 'privacy';
 
+// Replace with your real ScoreBat embed token
+const SCOREBAT_TOKEN = import.meta.env.VITE_SCOREBAT_TOKEN || '';
+
 /* ── ICONS ────────────────────────────────────────────────────────── */
 const LogoIcon = () => (
   <img src="/logo-icon.png?v=2" alt="Magic Analysis" className="w-10 h-10 rounded-xl shadow-sm" />
@@ -30,15 +33,30 @@ const InfoIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="non
 const ShieldIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
 const FileTextIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>;
 const SendIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;
+const ExternalLinkIcon = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
 
 /* ── SCOREBAT IFRAME PAGE ─────────────────────────────────────────── */
 function ScoreBatLivescore() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    if (!SCOREBAT_TOKEN) {
+      console.warn(
+        '[Magic Analysis] ScoreBat token is not set. ' +
+        'Add VITE_SCOREBAT_TOKEN to your Netlify environment variables. ' +
+        'Get a free token at https://www.scorebat.com/video-api/'
+      );
+    }
+  }, []);
+
   const refresh = () => {
     if (iframeRef.current) {
       iframeRef.current.src = iframeRef.current.src;
     }
   };
+
+  const embedSrc = `https://www.scorebat.com/embed/livescore/?token=${SCOREBAT_TOKEN}`;
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -50,7 +68,7 @@ function ScoreBatLivescore() {
       <div className="bg-[#12121a] rounded-xl border border-[#252536] overflow-hidden" style={{ height: '700px' }}>
         <iframe
           ref={iframeRef}
-          src="https://www.scorebat.com/embed/livescore/?token="
+          src={embedSrc}
           frameBorder="0"
           allowFullScreen
           className="w-full h-full"
@@ -64,22 +82,50 @@ function ScoreBatLivescore() {
 /* ── HIGHLIGHTS PAGE (light theme) ────────────────────────────────── */
 function HighlightsPage() {
   const highlights = [
-    { title: 'Premier League Goals', desc: 'All goals from Matchweek 34' },
-    { title: 'La Liga Top Moments', desc: 'Best of El Clasico' },
-    { title: 'Bundesliga Highlights', desc: 'Bayern vs Dortmund action' },
-    { title: 'Champions League', desc: 'Semi-final highlights' },
+    {
+      title: 'Premier League Goals',
+      desc: 'All goals from the latest Matchweek',
+      url: 'https://www.scorebat.com/premier-league-video/',
+    },
+    {
+      title: 'La Liga Top Moments',
+      desc: 'Best of El Clasico and top fixtures',
+      url: 'https://www.scorebat.com/la-liga-video/',
+    },
+    {
+      title: 'Bundesliga Highlights',
+      desc: 'Bayern, Dortmund and more',
+      url: 'https://www.scorebat.com/bundesliga-video/',
+    },
+    {
+      title: 'Champions League',
+      desc: 'Latest UCL match highlights',
+      url: 'https://www.scorebat.com/champions-league-video/',
+    },
   ];
+
+  const openHighlight = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div>
       <h1 className="text-lg font-bold text-[#1C1C1E] mb-1">Match Highlights</h1>
       <p className="text-xs text-[#8E8E93] mb-4">Video highlights from top leagues</p>
       <div className="grid gap-3">
         {highlights.map((h, i) => (
-          <div key={i} className="bg-white rounded-2xl p-4 border border-[#E5E5EA] shadow-sm hover:shadow-md transition-all cursor-pointer">
+          <div
+            key={i}
+            onClick={() => openHighlight(h.url)}
+            className="bg-white rounded-2xl p-4 border border-[#E5E5EA] shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-[0.98]"
+          >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-[#F2F2F7] flex items-center justify-center text-[#25d366]"><VideoIcon /></div>
-              <div className="flex-1"><h3 className="text-sm font-semibold text-[#1C1C1E]">{h.title}</h3><p className="text-xs text-[#8E8E93]">{h.desc}</p></div>
-              <ChevronRight />
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-[#1C1C1E]">{h.title}</h3>
+                <p className="text-xs text-[#8E8E93]">{h.desc}</p>
+              </div>
+              <div className="text-[#8E8E93]"><ExternalLinkIcon /></div>
             </div>
           </div>
         ))}
